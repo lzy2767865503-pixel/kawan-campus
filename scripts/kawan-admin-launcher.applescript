@@ -1,4 +1,4 @@
-property adminURL : "https://kawan-campus-malaysia.lzy2767865503.chatgpt.site/admin"
+property adminURL : "https://kawan-campus-malaysia.lzy2767865503.chatgpt.site/#admin"
 
 on run
 	try

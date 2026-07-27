@@ -51,7 +51,7 @@ npm run dev -- --host 127.0.0.1
 npm run launcher:mac
 ```
 
-安装完成后，双击桌面的 `Kawan Campus后台直入.app` 即可使用 Google Chrome 打开线上 `/admin` 管理后台；如果未安装 Chrome，启动器会改用系统默认浏览器。启动器不保存管理员邮箱、访问密钥或登录 Cookie。
+安装完成后，双击桌面的 `Kawan Campus生产管理后台.app` 即可使用 Google Chrome 打开私有生产站点的 `/#admin` 管理后台；如果未安装 Chrome，启动器会改用系统默认浏览器。原来的 `Kawan Campus后台直入.app` 会从桌面移走并备份到用户的 Application Support 目录，避免继续打开错误的 `/admin` 地址。启动器不保存管理员邮箱、访问密钥或登录 Cookie。
 
 ## 环境变量
 
