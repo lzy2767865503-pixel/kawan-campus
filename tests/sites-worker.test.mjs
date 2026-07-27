@@ -3,6 +3,8 @@ import test from "node:test";
 
 import worker from "../worker/index.js";
 
+const PERMANENT_POST_EXPIRES_AT = 253402300799000;
+
 function createAssets(files) {
   return {
     async fetch(request) {
@@ -63,15 +65,11 @@ function createStorage(seed = {}) {
               .slice(0, 13),
           };
         }
-        if (compactSql.includes("FROM posts WHERE expires_at <= ?")) {
-          return { results: state.posts.filter((row) => row.expires_at <= this.values[0]).slice(0, 20) };
-        }
         if (compactSql.includes("SELECT * FROM posts WHERE")) {
-          const category = compactSql.includes("category = ?") ? this.values[2] : null;
+          const category = compactSql.includes("category = ?") ? this.values[1] : null;
           return {
             results: state.posts
               .filter((row) => row.status === this.values[0]
-                && row.expires_at > this.values[1]
                 && (!category || row.category === category))
               .sort((a, b) => b.created_at - a.created_at)
               .slice(0, 80),
@@ -214,19 +212,16 @@ function createStorage(seed = {}) {
         } else if (compactSql.includes("SELECT owner_token_hash, image_key FROM posts")) {
           row = state.posts.find((item) => item.id === this.values[0]) || null;
         } else if (compactSql.includes("SELECT id FROM posts")
-          && compactSql.includes("status = 'published'")
-          && compactSql.includes("expires_at > ?")) {
+          && compactSql.includes("status = 'published'")) {
           row = state.posts.find(
             (item) => item.id === this.values[0]
-              && item.status === "published"
-              && item.expires_at > this.values[1],
+              && item.status === "published",
           ) || null;
         } else if (compactSql.includes("SELECT posts.id FROM posts")
           && compactSql.includes("posts.status = 'published'")) {
-          const [now, primaryKey, galleryKey] = this.values;
+          const [primaryKey, galleryKey] = this.values;
           row = state.posts.find(
             (item) => item.status === "published"
-              && item.expires_at > now
               && (item.image_key === primaryKey || state.postImages.some(
                 (image) => image.post_id === item.id && image.image_key === galleryKey,
               )),
@@ -281,7 +276,7 @@ function createStorage(seed = {}) {
           && compactSql.includes("AS published_posts")) {
           row = {
             published_posts: state.posts.filter(
-              (item) => item.status === "published" && item.expires_at > this.values[0],
+              (item) => item.status === "published",
             ).length,
             hidden_posts: state.posts.filter((item) => item.status === "hidden").length,
             pending_reports: state.reports.filter((item) => item.status === "pending").length,
@@ -877,6 +872,9 @@ test("accepts a free-form address and preserves multiple sequential images", asy
   assert.equal(createResponse.status, 201);
   assert.equal(created.post.area, "Evo Soho, Jalan Medan Bangi, Bandar Baru Bangi");
   assert.equal(created.post.imageUrls.length, 2);
+  assert.equal(created.post.retention, "permanent");
+  assert.equal(created.post.expiresAt, null);
+  assert.equal(state.posts[0].expires_at, PERMANENT_POST_EXPIRES_AT);
   assert.ok(created.post.imageUrls.every((url) => url.includes("posts%2Flive%2F")));
   assert.equal(state.postImages.length, 2);
   assert.equal(state.pendingUploads.length, 0);
@@ -1082,7 +1080,7 @@ test("admin can hide and restore a post immediately with optimistic locking and 
       moderated_at: null,
       version: 1,
       created_at: now,
-      expires_at: now + 86_400_000,
+      expires_at: now - 1,
     }],
   });
   const configuredEnv = {
@@ -1097,6 +1095,18 @@ test("admin can hide and restore a post immediately with optimistic locking and 
     configuredEnv,
   )).json();
   assert.equal(before.posts.length, 1);
+  assert.equal(before.posts[0].retention, "permanent");
+
+  const overviewResponse = await worker.fetch(
+    new Request("https://example.test/api/admin/overview", {
+      headers: { cookie: login.cookies },
+    }),
+    configuredEnv,
+  );
+  const overview = await overviewResponse.json();
+  assert.equal(overviewResponse.status, 200);
+  assert.equal(overview.metrics.publishedPosts, 1);
+  assert.equal(overview.rules.postRetention, "permanent");
 
   const hiddenResponse = await worker.fetch(adminWrite(
     "/api/admin/posts/post_moderation/status",
@@ -1463,7 +1473,7 @@ test("bounds every JSON request stream and returns one structured parse error sh
   assert.equal(malformedPayload.error.code, "invalid_json");
 });
 
-test("accepts reports only for live posts and deduplicates each IP plus post for 24 hours", async () => {
+test("accepts reports for every published post regardless of age and deduplicates each IP plus post for 24 hours", async () => {
   const now = Date.now();
   const basePost = {
     category: "marketplace",
@@ -1542,15 +1552,14 @@ test("accepts reports only for live posts and deduplicates each IP plus post for
   assert.equal(hidden.status, 404);
   assert.equal((await hidden.json()).error.code, "post_not_reportable");
 
-  const expired = await report("post_expired", "203.0.113.13");
-  assert.equal(expired.status, 404);
-  assert.equal((await expired.json()).error.code, "post_not_reportable");
+  const historic = await report("post_expired", "203.0.113.13");
+  assert.equal(historic.status, 201);
 
-  assert.equal(state.reports.length, 2);
+  assert.equal(state.reports.length, 3);
   const duplicateWindows = state.rateLimits.filter(
     (item) => item.action === "report_post_duplicate",
   );
-  assert.equal(duplicateWindows.length, 2);
+  assert.equal(duplicateWindows.length, 3);
   assert.ok(duplicateWindows.every((item) => item.expires_at > now));
   assert.ok(duplicateWindows.every((item) => /^[a-f0-9]{64}$/.test(item.key_hash)));
   assert.doesNotMatch(JSON.stringify(duplicateWindows), /203\.0\.113|post_live/);
@@ -1617,7 +1626,7 @@ test("hidden post media becomes private while authenticated moderators retain pr
       moderated_at: null,
       version: 1,
       created_at: now,
-      expires_at: now + 86_400_000,
+      expires_at: now - 1,
     }],
     postImages: [{
       id: "image_row",
@@ -1753,10 +1762,10 @@ test("admin report pagination returns accurate totals and a controlled moderatio
   assert.equal(searchedPostsPayload.posts[0].id, "post_two");
 });
 
-test("scheduled cleanup removes expired pending uploads, posts, media, and rate windows", async () => {
+test("scheduled cleanup removes temporary uploads and rate windows but permanently retains posts and live media", async () => {
   const now = Date.now();
   const pendingKey = "posts/pending/expired-pending.jpg";
-  const postKey = "posts/pending/expired-post.jpg";
+  const postKey = "posts/live/historic-post.jpg";
   const { env, state } = createStorage({
     pendingUploads: [{
       id: "pending_expired",
@@ -1769,8 +1778,8 @@ test("scheduled cleanup removes expired pending uploads, posts, media, and rate 
     posts: [{
       id: "post_expired",
       category: "marketplace",
-      title: "Expired post",
-      description: "This post and its image should be cleaned.",
+      title: "Historic post",
+      description: "This post and its live image must be retained permanently.",
       area: "UKM Main Campus",
       price: "",
       contact_type: "Telegram",
@@ -1812,8 +1821,10 @@ test("scheduled cleanup removes expired pending uploads, posts, media, and rate 
   await cleanupPromise;
 
   assert.equal(state.pendingUploads.length, 0);
-  assert.equal(state.posts.length, 0);
-  assert.equal(state.postImages.length, 0);
-  assert.equal(state.objects.size, 0);
+  assert.equal(state.posts.length, 1);
+  assert.equal(state.posts[0].id, "post_expired");
+  assert.equal(state.postImages.length, 1);
+  assert.equal(state.objects.has(pendingKey), false);
+  assert.equal(state.objects.has(postKey), true);
   assert.equal(state.rateLimits.length, 0);
 });

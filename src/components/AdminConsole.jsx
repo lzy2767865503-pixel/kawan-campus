@@ -150,7 +150,7 @@ const translations = {
     suspended: '已暂停',
     revoked: '已撤销',
     settingsTitle: '当前平台规则',
-    settingsSubtitle: '例如：帖子保存期限、可发布板块和内容限制由服务器统一执行；此页面仅供核对。',
+    settingsSubtitle: '例如：所有帖子永久保留，不会自动过期；发布限制与安全规则由服务器统一执行。',
     readOnly: '只读',
     noRules: '服务器当前没有返回可展示的平台规则。',
     auditTitle: '管理员身份与不可变审计记录',
@@ -288,7 +288,7 @@ const translations = {
     suspended: 'Suspended',
     revoked: 'Revoked',
     settingsTitle: 'Current platform rules',
-    settingsSubtitle: 'Example: retention, permitted categories and content limits are enforced by the server; this page is read-only.',
+    settingsSubtitle: 'Example: every post is retained permanently with no automatic expiry; publishing and safety rules are enforced by the server.',
     readOnly: 'Read only',
     noRules: 'The server did not return any displayable platform rules.',
     auditTitle: 'Admin identity and immutable audit trail',
@@ -324,6 +324,37 @@ const translations = {
     previousPage: 'Previous',
     nextPage: 'Next',
     resultRange: 'Showing',
+  },
+}
+
+const platformRuleCopy = {
+  postRetention: {
+    zh: ['帖子保存期限', '永久保留；不会因时间自动下架。发布者可删除自己的帖子，管理员可因违规下架并恢复。'],
+    en: ['Post retention', 'Permanent with no automatic expiry. Publishers may delete their posts; administrators may take down or restore policy-violating content.'],
+  },
+  maxImagesPerPost: {
+    zh: ['每帖图片上限', (value) => `${value} 张`],
+    en: ['Images per post', (value) => `${value} images`],
+  },
+  adminSessionHours: {
+    zh: ['管理员会话', (value) => `${value} 小时`],
+    en: ['Admin session', (value) => `${value} hours`],
+  },
+  clubSessionDays: {
+    zh: ['社团发布会话', (value) => `${value} 天`],
+    en: ['Club publishing session', (value) => `${value} days`],
+  },
+  maxUploadBytes: {
+    zh: ['单张图片上限', (value) => `${Math.round(Number(value) / (1024 * 1024))} MB`],
+    en: ['Maximum image size', (value) => `${Math.round(Number(value) / (1024 * 1024))} MB`],
+  },
+  postStatuses: {
+    zh: ['帖子状态', () => '公开中 / 已下架'],
+    en: ['Post statuses', () => 'Published / Taken down'],
+  },
+  clubStatuses: {
+    zh: ['社团权限状态', () => '使用中 / 已暂停 / 已撤销'],
+    en: ['Club access statuses', () => 'Active / Suspended / Revoked'],
   },
 }
 
@@ -1485,7 +1516,7 @@ function extractCredential(payload) {
     || firstDefined(rootRecord(payload), ['accessKey', 'key', 'activationKey', 'secret', 'oneTimeKey'])
 }
 
-function SettingsPage({ state, t, onRetry }) {
+function SettingsPage({ state, t, lang, onRetry }) {
   const overview = extractRecord(state.data, ['overview'])
   const rawRules = firstDefined(overview, ['rules', 'platformRules', 'settings'], [])
   const rules = Array.isArray(rawRules)
@@ -1493,18 +1524,34 @@ function SettingsPage({ state, t, onRetry }) {
     : rawRules && typeof rawRules === 'object'
       ? Object.entries(rawRules).map(([key, value]) => ({ key, label: key, value }))
       : []
+  const presentedRules = rules.map((rule) => {
+    const key = firstDefined(rule, ['id', 'key', 'name'])
+    const rawValue = firstDefined(rule, ['value', 'description', 'summary'], '—')
+    const localized = platformRuleCopy[key]?.[lang]
+    const formattedValue = typeof localized?.[1] === 'function'
+      ? localized[1](rawValue)
+      : localized?.[1]
+    return {
+      ...rule,
+      key,
+      displayLabel: localized?.[0]
+        || firstDefined(rule, ['label', 'name', 'title', 'key'], t.unknown),
+      displayValue: formattedValue
+        || (Array.isArray(rawValue) ? rawValue.join(' / ') : String(rawValue)),
+    }
+  })
 
   return (
     <ResourceState state={state} t={t} onRetry={onRetry}>
       <PageHeading title={t.settingsTitle} subtitle={t.settingsSubtitle} badge={t.readOnly} />
-      {rules.length ? (
+      {presentedRules.length ? (
         <section className="kc-admin-rules">
-          {rules.map((rule, index) => (
+          {presentedRules.map((rule, index) => (
             <div key={firstDefined(rule, ['id', 'key', 'name'], index)}>
               <span><Settings size={18} /></span>
               <div>
-                <strong>{firstDefined(rule, ['label', 'name', 'title', 'key'], t.unknown)}</strong>
-                <p>{String(firstDefined(rule, ['value', 'description', 'summary'], '—'))}</p>
+                <strong>{rule.displayLabel}</strong>
+                <p>{rule.displayValue}</p>
               </div>
               <LockKeyhole size={16} />
             </div>
@@ -1876,7 +1923,7 @@ export default function AdminConsole({ onExit }) {
             />
           ) : null}
           {active === 'settings' ? (
-            <SettingsPage state={resource} t={t} onRetry={retry} />
+            <SettingsPage state={resource} t={t} lang={lang} onRetry={retry} />
           ) : null}
           {active === 'audit' ? (
             <AuditPage state={resource} t={t} lang={lang} session={auth.session || {}} onRetry={retry} onPage={(offset) => setPage('audit', offset)} />

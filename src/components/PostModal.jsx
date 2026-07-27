@@ -490,8 +490,8 @@ export default function PostModal({
             <label>
               <input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
               <span>{lang === 'zh'
-                ? '我确认：联系方式会公开；租房不写具体房号；活动和拼车按时间下架，其余内容 30 天后下架。'
-                : 'I confirm: contact details are public; rentals omit unit numbers; events and rides expire by date, all other posts after 30 days.'}
+                ? '我确认：联系方式会公开；租房不写具体房号；帖子不会自动过期，除非我自行删除或管理员因违规下架。'
+                : 'I confirm: contact details are public; rentals omit unit numbers; posts do not expire automatically unless I delete mine or an administrator takes it down for a policy violation.'}
               </span>
             </label>
           </section>

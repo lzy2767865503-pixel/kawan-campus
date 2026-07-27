@@ -30,6 +30,8 @@ export const posts = sqliteTable(
     moderatedAt: integer('moderated_at'),
     version: integer('version').notNull().default(1),
     createdAt: integer('created_at').notNull(),
+    // Kept for backwards-compatible migrations. Posts are permanent and new
+    // rows use a year-9999 sentinel; runtime visibility never filters on it.
     expiresAt: integer('expires_at').notNull(),
   },
   (table) => [

@@ -1,7 +1,7 @@
 import {
+  Archive,
   ArrowRight,
   ClipboardCheck,
-  Clock3,
   FileText,
   Info,
   Megaphone,
@@ -267,7 +267,7 @@ export default function App() {
         </section>
 
         <section className="rules-band" id="rules">
-          <span className="rules-icon"><Clock3 size={20} /></span>
+          <span className="rules-icon"><Archive size={20} /></span>
           <div>
             <strong>{t.rulesTitle}</strong>
             <p>{t.rules}</p>

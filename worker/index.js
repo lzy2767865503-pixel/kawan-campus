@@ -7,6 +7,10 @@ const MAX_JSON_BYTES = 64 * 1024
 const PENDING_UPLOAD_HOURS = 6
 const MAX_POST_IMAGES = 12
 const ADMIN_SESSION_HOURS = 8
+// `posts.expires_at` remains for backwards-compatible D1 schemas. Public post
+// lifecycle is permanent; new rows use a year-9999 sentinel and no post query
+// treats this column as an expiry condition.
+const PERMANENT_POST_EXPIRES_AT = 253402300799000
 
 const CATEGORIES = new Set(['events', 'housing', 'marketplace', 'meetups', 'carpool', 'vehicles'])
 const CONTACT_TYPES = new Set(['WhatsApp', 'WeChat', 'Phone', 'Telegram'])
@@ -383,7 +387,8 @@ function rowToPost(row, imageKeys = []) {
     clubSlug: row.club_slug || '',
     clubName: row.club_name || '',
     createdAt: row.created_at,
-    expiresAt: row.expires_at,
+    expiresAt: null,
+    retention: 'permanent',
     verifiedClub: Boolean(row.club_slug),
     isDemo: false,
   }
@@ -415,12 +420,6 @@ async function getClubSession(request, env) {
        AND accounts.status = 'active'
      LIMIT 1`,
   ).bind(tokenHash, now).first()
-}
-
-function expirationFor(category, eventAt, now) {
-  if (category === 'events') return eventAt + (2 * DAY)
-  if (category === 'carpool' && eventAt) return eventAt + DAY
-  return now + (30 * DAY)
 }
 
 function hasExactUnitNumber(value) {
@@ -506,39 +505,17 @@ async function cleanupPendingUploads(env, now) {
   )))
 }
 
-async function cleanupExpiredPosts(env, now) {
-  const expired = await env.DB.prepare(
-    'SELECT id, image_key FROM posts WHERE expires_at <= ? LIMIT 20',
-  ).bind(now).all()
-  const rows = expired.results || []
-  if (!rows.length) return
-  const postIds = rows.map((row) => row.id)
-  const imageRows = await imageRowsForPosts(env, postIds)
-  if (env.UPLOADS) {
-    await deleteObjectKeys(env.UPLOADS, [
-      ...rows.map((row) => row.image_key),
-      ...imageRows.map((row) => row.image_key),
-    ])
-  }
-  await env.DB.batch([
-    ...postIds.map((postId) => env.DB.prepare('DELETE FROM post_images WHERE post_id = ?').bind(postId)),
-    ...postIds.map((postId) => env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(postId)),
-  ])
-}
-
 async function listPosts(request, env) {
   if (!env.DB) return json({ ok: true, posts: [], storageReady: false })
   const url = new URL(request.url)
   const category = clean(url.searchParams.get('category'), 30)
-  const now = Date.now()
-  await cleanupExpiredPosts(env, now)
   const statement = category && CATEGORIES.has(category)
     ? env.DB.prepare(
-      'SELECT * FROM posts WHERE status = ? AND expires_at > ? AND category = ? ORDER BY created_at DESC LIMIT 80',
-    ).bind('published', now, category)
+      'SELECT * FROM posts WHERE status = ? AND category = ? ORDER BY created_at DESC LIMIT 80',
+    ).bind('published', category)
     : env.DB.prepare(
-      'SELECT * FROM posts WHERE status = ? AND expires_at > ? ORDER BY created_at DESC LIMIT 80',
-    ).bind('published', now)
+      'SELECT * FROM posts WHERE status = ? ORDER BY created_at DESC LIMIT 80',
+    ).bind('published')
   const result = await statement.all()
   const rows = result.results || []
   const imageMap = imageMapForRows(await imageRowsForPosts(env, rows.map((row) => row.id)))
@@ -719,7 +696,7 @@ async function createPost(request, env) {
   const id = `post_${crypto.randomUUID()}`
   const ownerToken = randomToken()
   const ownerTokenHash = await sha256(ownerToken)
-  const expiresAt = expirationFor(category, eventAt, now)
+  const expiresAt = PERMANENT_POST_EXPIRES_AT
   let postImages = pendingImages
   try {
     postImages = await promotePendingImages(env, pendingImages, id, now)
@@ -1008,9 +985,8 @@ async function reportPost(request, env) {
      FROM posts
      WHERE id = ?
        AND status = 'published'
-       AND expires_at > ?
      LIMIT 1`,
-  ).bind(postId, now).first()
+  ).bind(postId).first()
   if (!reportablePost) {
     return fail('帖子不存在或当前无法举报。', 404, 'post_not_reportable')
   }
@@ -1248,23 +1224,23 @@ function adminPost(row) {
     version: Number(row.version || 1),
     reportCount: Number(row.report_count || 0),
     createdAt: row.created_at,
-    expiresAt: row.expires_at,
+    expiresAt: null,
+    retention: 'permanent',
   }
 }
 
 async function adminOverview(request, env) {
   const auth = await requireAdmin(request, env, [...ADMIN_ROLES])
   if (auth.error) return auth.error
-  const now = Date.now()
   const metrics = await env.DB.prepare(
     `SELECT
-       (SELECT COUNT(*) FROM posts WHERE status = 'published' AND expires_at > ?) AS published_posts,
+       (SELECT COUNT(*) FROM posts WHERE status = 'published') AS published_posts,
        (SELECT COUNT(*) FROM posts WHERE status = 'hidden') AS hidden_posts,
        (SELECT COUNT(*) FROM reports WHERE status = 'pending') AS pending_reports,
        (SELECT COUNT(*) FROM club_applications WHERE status = 'pending') AS pending_club_applications,
        (SELECT COUNT(*) FROM club_accounts WHERE status = 'active') AS active_clubs,
        (SELECT COUNT(*) FROM club_accounts WHERE status IN ('suspended', 'revoked')) AS restricted_clubs`,
-  ).bind(now).first()
+  ).first()
   return json({
     ok: true,
     metrics: {
@@ -1276,6 +1252,7 @@ async function adminOverview(request, env) {
       restrictedClubs: Number(metrics?.restricted_clubs || 0),
     },
     rules: {
+      postRetention: 'permanent',
       maxImagesPerPost: MAX_POST_IMAGES,
       adminSessionHours: ADMIN_SESSION_HOURS,
       clubSessionDays: SESSION_DAYS,
@@ -1965,7 +1942,6 @@ async function serveMedia(request, env, key) {
     `SELECT posts.id
      FROM posts
      WHERE posts.status = 'published'
-       AND posts.expires_at > ?
        AND (
          posts.image_key = ?
          OR EXISTS (
@@ -1976,7 +1952,7 @@ async function serveMedia(request, env, key) {
          )
        )
      LIMIT 1`,
-  ).bind(Date.now(), key, key).first()
+  ).bind(key, key).first()
   if (!visiblePost) return new Response('Not found', { status: 404 })
   const object = await env.UPLOADS.get(key)
   if (!object) return new Response('Not found', { status: 404 })
@@ -2075,7 +2051,6 @@ async function runScheduledCleanup(env) {
   if (!env.DB?.prepare) return
   const now = Date.now()
   await cleanupPendingUploads(env, now)
-  await cleanupExpiredPosts(env, now)
   await env.DB.prepare('DELETE FROM rate_limits WHERE expires_at <= ?').bind(now).run()
 }
 
