@@ -63,7 +63,6 @@ export default function App() {
   const [posts, setPosts] = useState([])
   const [clubSession, setClubSession] = useState(null)
   const [category, setCategory] = useState('all')
-  const [area, setArea] = useState('')
   const [search, setSearch] = useState('')
   const [online, setOnline] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -172,17 +171,9 @@ export default function App() {
         post.clubName,
       ].filter(Boolean).join(' ').toLowerCase()
       return (category === 'all' || post.category === category)
-        && (!area || String(post.area || '').toLowerCase().includes(area.toLowerCase()))
         && (!needle || text.includes(needle))
     }).sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
-  }, [allPosts, area, category, search])
-
-  const eventPosts = useMemo(
-    () => allPosts
-      .filter((post) => post.category === 'events' && Number(post.eventAt || 0) > Date.now())
-      .sort((a, b) => Number(a.eventAt) - Number(b.eventAt)),
-    [allPosts],
-  )
+  }, [allPosts, category, search])
 
   const showToast = (message) => {
     setToast(message)
@@ -194,14 +185,6 @@ export default function App() {
 
   const chooseCategory = (next) => {
     setCategory(next)
-    setArea('')
-    window.requestAnimationFrame(() => {
-      document.getElementById('discover')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
-  }
-
-  const chooseArea = (nextArea) => {
-    setArea(nextArea)
     window.requestAnimationFrame(() => {
       document.getElementById('discover')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
@@ -213,7 +196,6 @@ export default function App() {
     setOwnerTokens(nextTokens)
     localStorage.setItem('kawan-owner-tokens-v2', JSON.stringify(nextTokens))
     setCategory(post.category)
-    setArea('')
     showToast(lang === 'zh' ? '发布成功，已经出现在 UKM 动态里。' : 'Published to the UKM campus feed.')
   }
 
@@ -303,11 +285,6 @@ export default function App() {
                   {lang === 'zh' ? item.zh : item.en}
                 </button>
               ))}
-              {area && (
-                <button className="area-chip active" type="button" onClick={() => setArea('')}>
-                  {area} ×
-                </button>
-              )}
             </div>
 
             <div className="post-feed">
@@ -341,12 +318,7 @@ export default function App() {
 
           <CampusSidebar
             t={t}
-            lang={lang}
-            eventPosts={eventPosts}
-            areas={areas}
-            onOpenPost={setActivePost}
             onApplyClub={() => setClubApplyOpen(true)}
-            onArea={chooseArea}
           />
         </section>
 

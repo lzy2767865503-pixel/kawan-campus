@@ -164,7 +164,6 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .feed-filters button { min-height: 34px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #627069; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; font-size: 9.5px; font-weight: 700; }
 .feed-filters button:hover { border-color: #a8b7ae; }
 .feed-filters button.active { border-color: var(--green-700); background: var(--green-800); color: #fff; }
-.feed-filters button.area-chip { margin-left: auto; border-color: #d4b655; background: #fff8dc; color: #755b00; }
 .post-feed { display: flex; flex-direction: column; gap: 9px; }
 .post-card { min-height: 145px; border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; position: relative; transition: transform 160ms ease, border 160ms ease, box-shadow 160ms ease; }
 .post-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; z-index: 2; background: var(--category); }
@@ -200,27 +199,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .feed-post-cta small { margin-top: 4px; color: #65726b; font-size: 8.5px; }
 .feed-post-cta:hover { border-color: var(--green-700); }
 
-.campus-sidebar { position: sticky; top: 86px; display: flex; flex-direction: column; gap: 10px; }
-.sidebar-card { padding: 17px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
-.sidebar-heading { display: flex; align-items: center; gap: 10px; }
-.sidebar-heading > span { width: 36px; height: 36px; border-radius: 9px; background: #fff4c8; color: #9c7600; display: grid; place-items: center; }
-.area-card .sidebar-heading > span { background: var(--green-100); color: var(--green-700); }
-.sidebar-heading small { color: #8a948e; font-size: 7.5px; font-weight: 850; letter-spacing: .1em; }
-.sidebar-heading h2 { margin: 2px 0 0; color: var(--green-950); font-family: Georgia, "Songti SC", serif; font-size: 17px; letter-spacing: -.02em; }
-.week-events { margin-top: 13px; display: flex; flex-direction: column; gap: 6px; }
-.week-events button { width: 100%; min-height: 60px; padding: 9px 8px; border: 1px solid #eee4b9; border-radius: 9px; background: #fffdf5; display: grid; grid-template-columns: 55px minmax(0, 1fr) auto; gap: 8px; align-items: center; text-align: left; cursor: pointer; }
-.week-events button:hover { border-color: #d4b64e; }
-.week-events time { color: #8a6900; font-size: 8px; font-weight: 800; }
-.week-events strong { min-width: 0; color: #42483e; font-size: 9.5px; line-height: 1.4; }
-.week-events svg { color: #8a6900; }
-.hotspot-list { margin-top: 13px; display: flex; flex-direction: column; }
-.hotspot-list button { width: 100%; min-height: 54px; padding: 8px 4px; border: 0; border-bottom: 1px solid #edf0ee; background: #fff; display: grid; grid-template-columns: 33px minmax(0, 1fr); gap: 9px; align-items: center; text-align: left; cursor: pointer; }
-.hotspot-list button:last-child { border-bottom: 0; }
-.hotspot-list button:hover { background: var(--green-50); }
-.hotspot-list b { width: 28px; height: 28px; border-radius: 8px; background: var(--green-100); color: var(--green-700); display: grid; place-items: center; font-size: 8.5px; }
-.hotspot-list span { display: flex; flex-direction: column; min-width: 0; }
-.hotspot-list strong { font-size: 9.5px; }
-.hotspot-list small { margin-top: 3px; color: #849089; font-size: 7.5px; }
+.campus-sidebar { position: sticky; top: 86px; }
 .club-access-card { padding: 19px; border: 1px solid #bdd0c4; border-radius: 14px; background: var(--green-900); color: #fff; }
 .club-access-card > svg { color: #ffdc58; }
 .club-access-card h3 { margin: 12px 0 6px; font-family: Georgia, "Songti SC", serif; font-size: 16px; }
@@ -405,8 +384,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   .rules-divider, .rules-icon.contact { display: none; }
   .rules-band > div:last-child { grid-column: 2; }
   .campus-content { grid-template-columns: 1fr; }
-  .campus-sidebar { position: static; display: grid; grid-template-columns: 1fr 1fr; }
-  .club-access-card { grid-column: 1 / -1; }
+  .campus-sidebar { position: static; }
   .post-card-main { grid-template-columns: 150px minmax(0, 1fr); }
   .post-card-price { grid-column: 2; padding: 0 16px 13px; flex-direction: row; align-items: center; justify-content: space-between; }
   .post-image-wrap { grid-row: 1 / 3; height: 174px; }
@@ -450,7 +428,6 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
   .post-card-copy > p { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .post-card-price { padding: 4px 12px 10px; }
   .post-card-price strong { font-size: 12px; }
-  .campus-sidebar { display: flex; }
   .community-promise { align-items: flex-start; }
   .ukm-wordmark { display: none; }
   .site-footer { min-height: 120px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 14px; }
