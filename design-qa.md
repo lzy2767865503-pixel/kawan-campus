@@ -76,3 +76,51 @@
 - 本轮未发现需要二次修复的 P0/P1/P2 问题。
 
 final result: passed
+
+## 2026-07-28 · Hero 搜索区域疏密 QA
+
+### 对照基准
+
+- Source visual truth: `docs/qa/2026-07-28/hero-crowded-before.png`
+- Source pixels: 2546 × 422；这是用户标注的 Retina 2× 桌面裁切图，归一为约 1273 × 211 CSS px。
+- Implementation full-view evidence: `docs/qa/2026-07-28/hero-spacing-after-desktop.png`
+- Implementation mobile evidence: `docs/qa/2026-07-28/hero-spacing-after-mobile.png`
+- Focused before/after evidence: `docs/qa/2026-07-28/hero-spacing-comparison.png`
+- Desktop viewport / screenshot: 1440 × 1000 CSS px / 1440 × 1000 pixels，density 1×。
+- Mobile viewport / screenshot: 390 × 844 CSS px / 390 × 844 pixels，density 1×。
+- Focused comparison: 1280 × 580 pixels；在同一画面展示用户标注区域与修改后对应区域。
+- State: 中文首页、未打开弹窗、页面顶部 Hero 区域。
+
+### Full-view comparison evidence
+
+- 桌面端搜索框不再使用绝对定位压住 Hero 底边，而是在主文案与主视觉下方形成独立、居中的搜索行。
+- 搜索框宽度为 780 px，Hero 宽度为 1240 px，占比 62.9%；搜索框完整位于 Hero 内部。
+- Hero 与分类区之间保留 22 px 间距，搜索、Hero 与分类卡片不再互相叠压。
+- 手机端搜索框位于主视觉之后并保留在 Hero 内部，宽 342 px、Hero 宽 368 px；页面宽度与视口同为 390 px，没有横向溢出。
+
+### Focused region comparison evidence
+
+- 对照图上方显示修改前搜索框接近整栏宽度并压住 Hero 底部；下方显示修改后搜索框成为独立居中的一行。
+- 搜索框阴影同步减轻，视觉层级仍清晰，但不再产生悬浮遮挡感。
+- 分类卡片与搜索框完全分离，用户可以按“主视觉 → 搜索 → 分类”的顺序阅读。
+
+### Required fidelity surfaces
+
+- Fonts and typography: 搜索占位文案、快捷键与 Hero 字体层级保持不变。
+- Spacing and layout rhythm: 桌面端缩短搜索框并增加上下留白；手机端使用独立流式布局。
+- Colors and visual tokens: 深绿、白色、边框与阴影 token 延续现有设计体系。
+- Image quality and asset fidelity: Hero 校园照片和 UKM TODAY 卡片未替换、未拉伸、未降低清晰度。
+- Copy and content: 中文、英文文案及搜索提示均未改动。
+
+### Findings
+
+- P0/P1/P2: none.
+- P3: 手机端搜索框仍接近内容栏宽度，以保留足够的输入触控面积；其上下留白已与移动端节奏一致。
+
+### Comparison history
+
+- Pass 1: 将搜索框由绝对定位叠压改为 CSS Grid 中跨两列的独立行，并收窄为 Hero 的 62.9%。
+- Post-fix evidence: 桌面端搜索框完整位于 Hero 内、分类区间距为 22 px；手机端无横向溢出；浏览器 console error/warning 为 0。
+- 语言状态与搜索输入框保持可用；本轮未发现需要二次修复的 P0/P1/P2 问题。
+
+final result: passed
