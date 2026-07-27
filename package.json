@@ -25,6 +25,7 @@
     "test:worker": "node --test tests/sites-worker.test.mjs",
     "check": "npm test && npm run build",
     "deploy:dry-run": "wrangler deploy --dry-run",
+    "deploy:aws": "bash scripts/deploy-aws.sh",
     "preview": "vite preview"
   },
   "dependencies": {

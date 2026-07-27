@@ -59,6 +59,7 @@ npm run launcher:mac
 |---|---:|---|
 | `KAWAN_ADMIN_EMAIL` | 是 | Owner 管理员登录邮箱 |
 | `KAWAN_ADMIN_ACCESS_KEY` | 是 | 高强度后台访问密钥 |
+| `KAWAN_RATE_LIMIT_SALT` | 生产建议 | 独立的 IP 限速哈希盐，避免与管理员密钥共用 |
 | `UKM_CLUB_KEYS` | 迁移期可选 | 旧社团密钥哈希注册表；新社团由后台审批 |
 
 生产环境应在托管平台的 secret/environment 管理界面配置变量。不要把真实值写入源码、Git、构建产物、截图或聊天。
@@ -103,6 +104,29 @@ GitHub Actions 会在 push 和 pull request 时执行凭证模式扫描、空库
 5. 部署与测试完全相同的 commit，并在生产环境重新验证后台登录、下架/恢复和社团停权。
 
 Worker 每小时运行一次 scheduled cleanup，只清理过期的待上传对象和限速窗口，不会删除任何已发布帖子或 `posts/live/` 媒体。生产 R2 还应只给 `posts/pending/` 前缀配置短期 lifecycle 自动删除，作为定时任务异常时的第二层保护。
+
+## Cloudflare 与 AWS 双云发布
+
+Cloudflare Worker 是主 API、D1 数据库与 R2 图片存储所在位置。AWS 使用私有 S3 保存同一份前端构建，并通过 CloudFront 提供第二个生产入口；CloudFront 会把 `/api/*` 与 `/media/*` 转发到 Cloudflare Worker，因此发帖、图片、社团权限和管理后台不会退化为静态演示。
+
+Cloudflare 发布：
+
+```bash
+npm run check
+npx wrangler d1 migrations apply kawan-campus --remote
+npx wrangler deploy --strict
+```
+
+首次发布后，通过 Wrangler secrets 配置 `KAWAN_ADMIN_EMAIL`、`KAWAN_ADMIN_ACCESS_KEY`、`KAWAN_RATE_LIMIT_SALT` 和可选的 `UKM_CLUB_KEYS`。
+
+AWS 发布建议在 AWS CloudShell 中执行，默认区域为新加坡 `ap-southeast-1`：
+
+```bash
+npm run build
+npm run deploy:aws
+```
+
+`infra/aws/kawan-campus.yaml` 会创建版本化私有 S3 bucket、Origin Access Control、CloudFront、浏览器安全响应头和 API Origin 重写函数。S3 不公开；删除 CloudFormation stack 时 bucket 仍会保留，避免误删用户可复刻的生产构建。
 
 ## 安全与运营边界
 
