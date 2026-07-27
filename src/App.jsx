@@ -371,7 +371,7 @@ export default function App() {
           <a href="#discover">{t.discover}</a>
           <a href="#rules">{lang === 'zh' ? '规则' : 'Rules'}</a>
           <button type="button" onClick={() => setClubApplyOpen(true)}>{lang === 'zh' ? '社团申请' : 'Club access'}</button>
-          <a href="/admin">{lang === 'zh' ? '管理后台' : 'Admin'}</a>
+          <a href="#admin">{lang === 'zh' ? '管理后台' : 'Admin'}</a>
         </nav>
         <small>© 2026 Kawan Campus · Built for UKM students</small>
       </footer>

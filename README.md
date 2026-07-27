@@ -41,7 +41,7 @@ npm run check
 npm run dev -- --host 127.0.0.1
 ```
 
-打开首页后访问 `/admin`。把 `.dev.vars` 中的开发管理员邮箱与密钥填入登录页。`.dev.vars` 已被 Git 忽略，绝不能提交。
+打开首页后点击页脚“管理后台”，或访问 `/#admin`（标准 Worker 路由也支持 `/admin`）。把 `.dev.vars` 中的开发管理员邮箱与密钥填入登录页。`.dev.vars` 已被 Git 忽略，绝不能提交。
 
 ## 环境变量
 
