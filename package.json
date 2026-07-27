@@ -20,6 +20,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "launcher:mac": "zsh scripts/install-macos-admin-launcher.sh",
     "test": "npm run test:worker",
     "test:worker": "node --test tests/sites-worker.test.mjs",
     "check": "npm test && npm run build",

@@ -43,6 +43,16 @@ npm run dev -- --host 127.0.0.1
 
 打开首页后点击页脚“管理后台”，或访问 `/#admin`（标准 Worker 路由也支持 `/admin`）。把 `.dev.vars` 中的开发管理员邮箱与密钥填入登录页。`.dev.vars` 已被 Git 忽略，绝不能提交。
 
+## macOS 桌面后台启动器
+
+在 Mac 上运行一次：
+
+```bash
+npm run launcher:mac
+```
+
+安装完成后，双击桌面的 `Kawan Campus后台直入.app` 即可使用 Google Chrome 打开线上 `/admin` 管理后台；如果未安装 Chrome，启动器会改用系统默认浏览器。启动器不保存管理员邮箱、访问密钥或登录 Cookie。
+
 ## 环境变量
 
 | 名称 | 必需 | 用途 |
