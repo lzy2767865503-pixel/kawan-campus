@@ -20,7 +20,7 @@
 - 企业管理后台已在桌面和手机断点检查；导航、搜索、状态过滤、分页、退出和六个管理模块均保持可用。
 - 已完成真实浏览器联动：发布测试帖 → 后台一键下架 → 前台消失 → 后台恢复 → 前台重新显示。
 - Worker 回归测试覆盖历史 `expires_at` 已过去的公开帖仍出现在信息流、可举报、媒体可访问并计入后台指标；定时任务只清理临时对象与限速窗口。
-- “功能 · 2”在桌面和手机导航均展示论文数据机器人与简历项目，外链带 `noopener noreferrer`。
+- 论文数据机器人与简历项目在桌面顶部、平板和手机底栏均作为一级导航直接显示，外链带 `noopener noreferrer`。
 
 ## 视觉对照
 
@@ -122,5 +122,63 @@ final result: passed
 - Pass 1: 将搜索框由绝对定位叠压改为 CSS Grid 中跨两列的独立行，并收窄为 Hero 的 62.9%。
 - Post-fix evidence: 桌面端搜索框完整位于 Hero 内、分类区间距为 22 px；手机端无横向溢出；浏览器 console error/warning 为 0。
 - 语言状态与搜索输入框保持可用；本轮未发现需要二次修复的 P0/P1/P2 问题。
+
+final result: passed
+
+## 2026-07-28 · 论文机器人与简历一级导航 QA
+
+### 对照基准
+
+- Source visual truth: `docs/qa/2026-07-28/nav-tools-before.png`
+- Source pixels: 1018 × 400；这是用户标注的桌面导航与已展开“功能 · 2”菜单裁切图。
+- Implementation desktop full-view evidence: `docs/qa/2026-07-28/nav-direct-after-desktop.png`
+- Implementation focused header evidence: `docs/qa/2026-07-28/nav-direct-after-header.png`
+- Implementation mobile evidence: `docs/qa/2026-07-28/nav-direct-after-mobile.png`
+- Focused before/after evidence: `docs/qa/2026-07-28/nav-direct-comparison.png`
+- Desktop viewport / screenshot: 1440 × 1000 CSS px / 1440 × 1000 pixels，density 1×。
+- Focused header: 1440 × 120 CSS px / 1440 × 120 pixels，density 1×。
+- Mobile viewport / screenshot: 390 × 844 CSS px / 390 × 844 pixels，density 1×。
+- Focused comparison: 1200 × 830 pixels；在同一画面展示原下拉菜单与修改后一级导航。
+- State: 中文首页、页面顶部；修改前“功能”菜单展开，修改后无二级菜单。
+
+### Full-view comparison evidence
+
+- 桌面端“校园动态、活动、论文机器人、简历”位于同一导航行；论文与简历入口不再需要展开菜单。
+- 1440、1280 与 1081 px 宽度均无导航碰撞或横向溢出；1080 px 及以下自动切换到五项底部导航。
+- 平板和手机底栏直接显示“动态、活动、发布、论文、简历”，补齐原 561–1080 px 没有主导航入口的断点缺口。
+- 390 与 320 px 手机宽度均无横向溢出；五个入口触控高度为 54 px。
+
+### Focused region comparison evidence
+
+- 对照图上方显示两个项目隐藏在“功能 · 2”下拉卡片中；下方显示两个项目紧跟“校园动态、活动”直接排列。
+- 论文机器人使用现有 `ClipboardCheck` 图标，简历使用现有 `FileText` 图标；图标尺寸、颜色与活动入口一致。
+- 原下拉边框、阴影、数量徽章和展开箭头均已删除，没有遗留空白占位。
+
+### Required fidelity surfaces
+
+- Fonts and typography: 一级导航沿用现有 12.5 px、700 字重与中英文排版；手机使用简短中英文标签避免截断。
+- Spacing and layout rhythm: 桌面导航项保持 18 px 间距；手机五栏等宽，发布入口仍保持中心强调。
+- Colors and visual tokens: 继续使用现有深绿文字、绿色图标、白色页头与绿色发布按钮。
+- Image quality and asset fidelity: 本次目标区域没有照片或插画；品牌标志与现有 Lucide 图标未替换、未变形。
+- Copy and content: 桌面中文为“论文机器人 / 简历”，英文为“Thesis Robot / Resume”；完整项目名称保留在 `aria-label` 与 `title` 中。
+
+### Interaction and accessibility evidence
+
+- “活动”入口可切换到校园活动分类；“发布”入口可打开并关闭发布弹窗。
+- 两个项目外链保持正确 URL、`target="_blank"` 与 `rel="noopener noreferrer"`。
+- 中文和英文桌面导航均已检查；手机底栏五项均为直接按钮或链接，不再出现 `details` 菜单。
+- 页面 console error / warning 为 0；键盘焦点继续使用全局 `focus-visible` 样式。
+
+### Findings
+
+- P0/P1/P2: none.
+- P3: 平板底栏将五个入口限制在约 430 px 的居中区域，以保持手机式触控密度；这是断点切换后的预期布局。
+
+### Comparison history
+
+- Pass 1: 移除桌面与手机的“功能 · 2”二级菜单，把两个项目改为直接入口。
+- Pass 1 responsive review: 发现原 561–1080 px 区间隐藏桌面导航但尚未显示手机导航；将五项底栏显示断点扩展至 1080 px。
+- Post-fix evidence: 1081 px 显示无碰撞的桌面四项导航；1080 px 显示五项底栏；390 与 320 px 无横向溢出，触控高度 54 px。
+- 本轮未发现需要继续修复的 P0/P1/P2 问题。
 
 final result: passed

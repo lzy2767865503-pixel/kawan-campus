@@ -1,6 +1,7 @@
 import {
   Archive,
   ArrowRight,
+  CalendarDays,
   ClipboardCheck,
   FileText,
   Info,
@@ -9,7 +10,6 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
-  Wrench,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -349,15 +349,11 @@ export default function App() {
       </footer>
 
       <nav className="mobile-bottom-nav">
-        <a href="#discover"><Sparkles size={20} /><span>{t.discover}</span></a>
-        <button className="mobile-post-main" type="button" onClick={() => setPostOpen(true)}><Plus size={22} /><span>{t.post}</span></button>
-        <details className="mobile-tools">
-          <summary><Wrench size={20} /><span>{lang === 'zh' ? '功能 · 2' : 'Tools · 2'}</span></summary>
-          <div>
-            <a href="https://lrobotform.com/tools/#service" target="_blank" rel="noopener noreferrer"><ClipboardCheck size={18} /><span>{lang === 'zh' ? '论文数据机器人' : 'Thesis Data Robot'}</span></a>
-            <a href="https://lrobotform.com/resume/" target="_blank" rel="noopener noreferrer"><FileText size={18} /><span>{lang === 'zh' ? '简历项目' : 'Resume Project'}</span></a>
-          </div>
-        </details>
+        <a href="#discover"><Sparkles size={20} /><span>{lang === 'zh' ? '动态' : 'Feed'}</span></a>
+        <button type="button" onClick={() => chooseCategory('events')}><CalendarDays size={20} /><span>{t.events}</span></button>
+        <button className="mobile-post-main" type="button" onClick={() => setPostOpen(true)}><Plus size={21} /><span>{t.post}</span></button>
+        <a href="https://lrobotform.com/tools/#service" target="_blank" rel="noopener noreferrer" aria-label={lang === 'zh' ? '打开论文数据机器人' : 'Open Thesis Data Robot'}><ClipboardCheck size={20} /><span>{lang === 'zh' ? '论文' : 'Thesis'}</span></a>
+        <a href="https://lrobotform.com/resume/" target="_blank" rel="noopener noreferrer" aria-label={lang === 'zh' ? '打开简历项目' : 'Open Resume Project'}><FileText size={20} /><span>{lang === 'zh' ? '简历' : 'Resume'}</span></a>
       </nav>
 
       <PostModal

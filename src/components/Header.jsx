@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronDown, ChevronRight, Circle, Globe2, Plus, Wrench } from 'lucide-react'
+import { CalendarDays, ChevronRight, Circle, ClipboardCheck, FileText, Globe2, Plus } from 'lucide-react'
 
 export default function Header({ lang, setLang, online, onPost, onEvents }) {
   return (
@@ -15,24 +15,28 @@ export default function Header({ lang, setLang, online, onPost, onEvents }) {
           <CalendarDays size={15} />
           {lang === 'zh' ? '活动' : 'Events'}
         </button>
-        <details className="nav-tools">
-          <summary>
-            <Wrench size={15} />
-            {lang === 'zh' ? '功能' : 'Tools'}
-            <span>2</span>
-            <ChevronDown size={14} />
-          </summary>
-          <div>
-            <a href="https://lrobotform.com/tools/#service" target="_blank" rel="noopener noreferrer">
-              <strong>{lang === 'zh' ? '论文数据机器人' : 'Thesis Data Robot'}</strong>
-              <small>{lang === 'zh' ? '问卷、论文与数据分析' : 'Survey, thesis and data analysis'}</small>
-            </a>
-            <a href="https://lrobotform.com/resume/" target="_blank" rel="noopener noreferrer">
-              <strong>{lang === 'zh' ? '简历项目' : 'Resume Project'}</strong>
-              <small>{lang === 'zh' ? '简历优化与求职材料' : 'CV and application materials'}</small>
-            </a>
-          </div>
-        </details>
+        <a
+          className="tool-nav-link"
+          href="https://lrobotform.com/tools/#service"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={lang === 'zh' ? '打开论文数据机器人' : 'Open Thesis Data Robot'}
+          title={lang === 'zh' ? '问卷、论文与数据分析' : 'Survey, thesis and data analysis'}
+        >
+          <ClipboardCheck size={15} />
+          {lang === 'zh' ? '论文机器人' : 'Thesis Robot'}
+        </a>
+        <a
+          className="tool-nav-link"
+          href="https://lrobotform.com/resume/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={lang === 'zh' ? '打开简历项目' : 'Open Resume Project'}
+          title={lang === 'zh' ? '简历优化与求职材料' : 'CV and application materials'}
+        >
+          <FileText size={15} />
+          {lang === 'zh' ? '简历' : 'Resume'}
+        </a>
       </nav>
 
       <div className="header-actions">
