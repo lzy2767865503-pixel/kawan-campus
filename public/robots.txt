@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /media/
+
+Sitemap: https://kawan-campus-malaysia.lzy2767865503.chatgpt.site/sitemap.xml

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars*
+.local-secrets/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.tgz
+*.tar.gz

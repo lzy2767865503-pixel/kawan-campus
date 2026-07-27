@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Scan tracked source for credential patterns
+        shell: bash
+        run: |
+          if git grep -EIn \
+            '(sk-(proj|svcacct)-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----)'; then
+            echo "Potential credential found in tracked source."
+            exit 1
+          fi
+
+      - name: Apply migrations to a fresh local D1 database
+        run: npx wrangler d1 migrations apply DB --local --persist-to "${{ runner.temp }}/kawan-d1"
+
+      - name: Verify Drizzle schema and migration snapshots are synchronized
+        shell: bash
+        run: |
+          npm run db:generate
+          git diff --exit-code -- db/schema.ts drizzle
+
+      - name: Test and build production assets
+        run: npm run check
+
+      - name: Validate the Cloudflare deployment bundle
+        run: npm run deploy:dry-run
+
+      - name: Audit production dependencies
+        run: npm audit --audit-level=high

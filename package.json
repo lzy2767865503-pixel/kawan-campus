@@ -1,0 +1,43 @@
+{
+  "name": "kawan-campus",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "author": "LAI ZEYU",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "npm@11.13.0",
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.25.12"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/prepare-sites-build.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "test": "npm run test:worker",
+    "test:worker": "node --test tests/sites-worker.test.mjs",
+    "check": "npm test && npm run build",
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "lucide-react": "1.25.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.47.0",
+    "@cloudflare/workers-types": "^5.20260727.1",
+    "@vitejs/plugin-react": "^6.0.3",
+    "drizzle-kit": "^0.31.10",
+    "vite": "^8.1.5",
+    "wrangler": "^4.114.0"
+  }
+}

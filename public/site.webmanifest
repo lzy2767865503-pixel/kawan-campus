@@ -1,0 +1,16 @@
+{
+  "name": "Kawan Campus UKM",
+  "short_name": "Kawan UKM",
+  "description": "UKM 学生的双语校园生活社区",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8f5",
+  "theme_color": "#075b3a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
